@@ -1,0 +1,216 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "PluginRes.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_PANEL DIALOGEX 0, 0, 259, 145
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+EXSTYLE WS_EX_TOOLWINDOW
+CAPTION " Darkplaces MD3 Exporter by VorteX (based on Pop'N'Fresh's exporter)"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "Run Export",IDC_BUTTON_EXPORT,79,125,101,16
+    CONTROL         " Ignore objects whose name starts with 'Bip'",IDC_CHECK_IGNOREBIP,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,32,224,10
+    CONTROL         " Debug mode (for bug tracking)",IDC_CHECK_DEBUG,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,109,229,10
+    EDITTEXT        IDC_EDIT_FRAMES,59,17,185,12,ES_AUTOHSCROLL
+    LTEXT           "Frame range",IDC_STATIC,14,18,43,8
+    GROUPBOX        " Export objects ",IDC_STATIC,6,5,245,43,WS_GROUP
+    GROUPBOX        " Advanced export ",IDC_STATIC,6,53,244,53,WS_GROUP
+    CONTROL         "Create tag_pivot for pivot position",IDC_CHECK_RECENTER,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,64,227,10
+    CONTROL         "Export chunks (many .md3 files suffixed by mesh names)",IDC_CHECK_MESHSEPARATE,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,77,227,10
+    CONTROL         "Detect ""collision"" and ""shadow"" meshes",IDC_CHECK_MESHSPECIAL,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,91,227,10
+END
+
+IDD_EXPORTING DIALOGEX 0, 0, 225, 24
+STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION
+EXSTYLE WS_EX_STATICEDGE
+CAPTION "Exporting..."
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    LTEXT           "Starting Export",IDC_TEXT_EXPORTING,7,7,211,8
+END
+
+IDD_BOX DIALOGEX 0, 0, 318, 180
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Dialog"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    CTEXT           "Description of message dialog",IDC_SCRIPT_DESC,6,7,306,18
+    EDITTEXT        IDC_SCRIPT,6,28,306,123,ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL
+    DEFPUSHBUTTON   "Close",IDOK,102,157,115,16
+END
+
+IDD_DONE DIALOGEX 0, 0, 319, 95
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Export result"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    PUSHBUTTON      "Show .shader",IDC_EXPORT_SHADER,6,73,82,16
+    DEFPUSHBUTTON   "Close",IDC_EXPORT_CLOSE,197,73,115,16
+    EDITTEXT        IDC_EXPORT_LOG,6,6,306,60,ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL
+    EDITTEXT        IDC_EXPORT_SHADERTEXT,91,77,10,12,ES_MULTILINE | ES_AUTOHSCROLL | NOT WS_VISIBLE
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO 
+BEGIN
+    IDD_PANEL, DIALOG
+    BEGIN
+        RIGHTMARGIN, 258
+        BOTTOMMARGIN, 141
+    END
+
+    IDD_EXPORTING, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 218
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 17
+    END
+
+    IDD_BOX, DIALOG
+    BEGIN
+        LEFTMARGIN, 6
+        RIGHTMARGIN, 312
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 173
+    END
+
+    IDD_DONE, DIALOG
+    BEGIN
+        LEFTMARGIN, 6
+        RIGHTMARGIN, 312
+        TOPMARGIN, 6
+        BOTTOMMARGIN, 89
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "PluginRes.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 3,0,0,0
+ PRODUCTVERSION 3,0,0,0
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x40004L
+ FILETYPE 0x2L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "Comments", "TECH: "
+            VALUE "CompanyName", "Pop N Fresh / VorteX"
+            VALUE "FileDescription", "MD3 model format exporter"
+            VALUE "FileVersion", "3.0.0.0"
+            VALUE "InternalName", "ExportMD3"
+            VALUE "OriginalFilename", "ExportMD3.dle"
+            VALUE "ProductName", "3D Studio MAX"
+            VALUE "ProductVersion", "3.0.0.0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE 
+BEGIN
+    IDS_LIBDESCRIPTION      "MD3 model format exporter"
+    IDS_CATEGORY            "Quake .MD3 export"
+    IDS_CLASS_NAME          "ExportMD3"
+    IDS_PARAMS              "Parameters"
+    IDS_SPIN                "Spin"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

@@ -1,0 +1,24 @@
+----------------------------------------
+ Changes from Original Pop'N'Fresh's Max6 Plugin:
+----------------------------------------
+
+Version 1.0
+-------------
+
+- Correct normals exporting with support for smoothing groups (with mesh subdivision) and edited normals.
+- Correct shader paths. Now counting textures/ and gfx/ for root path and converting backslashes.
+- Consistent UV exporting (reading vertex channels) allowing usage of COLLADA
+- Advanced export messages/warnings handling.
+- Warnings for null/nullshader materials
+- Not writing null skins anymore but "noshader" instead as most MD3 loaders expects at least 1 skin.
+- Bound boxes and culling radius for frames.
+- Fixing lazy mesh names "Cylinder01", "Box02" to "base", "base2" etc. with a warning.
+- Removed relative tag alignment.
+- More consistent with MD3 spec.
+- Defaulting to "0" frame range when exporting.
+- Export names as lowercase.
+- Ability to export multimaterials (only first texture layer)
+- Export several .md3s from one scene (for each object, model get suffixed by object name)
+- Export tag_pivot for object pivot position
+- Generation of sample .shader file
+- Export "collision"/"shadow" mesh
