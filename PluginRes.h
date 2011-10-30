@@ -24,12 +24,17 @@
 #define IDC_RADIO_FORWARD               1020
 #define IDC_CHECK_COLLISION             1020
 #define IDC_CHECK_MESHSPECIAL           1020
+#define IDC_CHECK_MESHSPECIAL2          1021
+#define IDC_CHECK_MATERIALNAMESASSHADERS 1021
 #define IDC_SCRIPT_DESC                 1026
 #define IDC_SCRIPT                      1027
 #define IDC_EXPORT_LOG                  1029
 #define IDC_EXPORT_SHADER               1030
 #define IDC_EXPORT_CLOSE                1031
 #define IDC_EXPORT_SHADERTEXT           1032
+#define IDC_MULTIMATERIAL_NONE          1033
+#define IDC_MULTIMATERIAL_SKINFILES     1034
+#define IDC_MULTIMATERIAL_SKINMODELS    1035
 #define IDC_COLOR                       1456
 #define IDC_EDIT                        1490
 #define IDC_SPIN                        1496
@@ -40,7 +45,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        105
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1033
+#define _APS_NEXT_CONTROL_VALUE         1034
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

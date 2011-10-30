@@ -38,12 +38,22 @@ extern HINSTANCE hInstance;
 
 #define EXPORTMD3_CLASS_ID Class_ID(0x35a0cc95, 0x7098cbf0)
 
+enum
+{
+	MULTIMATERIALS_NONE,
+	MULTIMATERIALS_SKINS,
+	MULTIMATERIALS_MODELS,
+	MULTIMATERIALS_LAYERS
+};
+
 extern int  g_ticks_per_frame;
 extern int  g_total_frames;
 extern bool g_ignore_bip;
 extern bool g_tag_for_pivot;
 extern bool g_mesh_separate;
 extern bool g_mesh_special;
+extern bool g_mesh_materialasshader;
+extern int  g_mesh_multimaterials;
 extern bool g_show_debug;
 
 struct ShaderMaterial

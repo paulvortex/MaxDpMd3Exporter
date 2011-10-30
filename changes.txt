@@ -22,3 +22,5 @@ Version 1.0
 - Export tag_pivot for object pivot position
 - Generation of sample .shader file
 - Export "collision"/"shadow" mesh
+- Objects beginning from * are always ignores
+- Can use materialname as shadername if it contains '/' character

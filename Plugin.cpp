@@ -18,6 +18,8 @@ bool g_ignore_bip = false;
 bool g_tag_for_pivot = true;
 bool g_mesh_separate = false;
 bool g_mesh_special = true;
+bool g_mesh_materialasshader = true;
+int  g_mesh_multimaterials;
 bool g_show_debug = false;
 
 std::list<Range> g_frame_ranges;
@@ -78,46 +80,60 @@ static INT_PTR CALLBACK ExportMD3OptionsDlgProc(HWND hWnd,UINT message,WPARAM wP
 			SendDlgItemMessage(hWnd, IDC_CHECK_MESHSEPARATE, BM_SETCHECK, (WPARAM) false, 0L);
 			SendDlgItemMessage(hWnd, IDC_CHECK_COLLISION, BM_SETCHECK, (WPARAM) true, 0L);
 			SendDlgItemMessage(hWnd, IDC_CHECK_DEBUG, BM_SETCHECK, (WPARAM) false, 0L);
+			SendDlgItemMessage(hWnd, IDC_CHECK_MATERIALNAMESASSHADERS, BM_SETCHECK, (WPARAM) true, 0L);
+			SendDlgItemMessage(hWnd, IDC_MULTIMATERIAL_NONE, BM_SETCHECK, (WPARAM) true, 0L);
 			SetDlgItemText(hWnd, IDC_EDIT_FRAMES, "0");
 			return TRUE;
 		case WM_COMMAND:
 			if (HIWORD(wParam) == BN_CLICKED)
+			{
 				if (LOWORD(wParam) == IDC_BUTTON_EXPORT)
-					PostMessage(hWnd, WM_CLOSE, 0, 0);
+				{
+					g_ignore_bip = (SendDlgItemMessage(hWnd, IDC_CHECK_IGNOREBIP, BM_GETCHECK, 0, 0L) == BST_CHECKED);
+					g_tag_for_pivot = (SendDlgItemMessage(hWnd, IDC_CHECK_RECENTER, BM_GETCHECK, 0, 0L) == BST_CHECKED);
+					g_mesh_separate = (SendDlgItemMessage(hWnd, IDC_CHECK_MESHSEPARATE, BM_GETCHECK, 0, 0L) == BST_CHECKED);
+					g_mesh_special = (SendDlgItemMessage(hWnd, IDC_CHECK_MESHSPECIAL, BM_GETCHECK, 0, 0L) == BST_CHECKED);
+					g_mesh_materialasshader = (SendDlgItemMessage(hWnd, IDC_CHECK_MATERIALNAMESASSHADERS, BM_GETCHECK, 0, 0L) == BST_CHECKED);
+					g_show_debug = (SendDlgItemMessage(hWnd, IDC_CHECK_DEBUG, BM_GETCHECK, 0, 0L) == BST_CHECKED);
+					if (SendDlgItemMessage(hWnd, IDC_MULTIMATERIAL_SKINFILES, BM_GETCHECK, 0, 0L) == BST_CHECKED)
+						g_mesh_multimaterials = MULTIMATERIALS_SKINS;
+					else if (SendDlgItemMessage(hWnd, IDC_MULTIMATERIAL_SKINMODELS, BM_GETCHECK, 0, 0L) == BST_CHECKED)
+						g_mesh_multimaterials = MULTIMATERIALS_MODELS;
+					else
+						g_mesh_multimaterials = MULTIMATERIALS_NONE;
+					g_total_frames = 0;
+					g_frame_ranges.clear();
+					GetDlgItemText(hWnd, IDC_EDIT_FRAMES, ranges_named, 127);
+
+					token = strtok(ranges_named, ",");
+					while(token != NULL)
+					{
+						// get a range
+						subtoken = strchr(token, '-');
+						if (subtoken != NULL)
+						{
+							// find a range
+							*subtoken = '\0';
+							range.first	= atoi(token);
+							range.last = atoi(subtoken+1);
+						}
+						else
+						{
+							// a single value
+							range.first	= atoi(token);
+							range.last = range.first;
+						}	
+						g_total_frames += range.last - range.first + 1;
+						g_frame_ranges.push_back(range);
+						token = strtok(NULL, ",");
+					}
+					EndDialog(hWnd, FALSE);
+				}
+				else if (LOWORD(wParam) == IDCANCEL)
+					EndDialog(hWnd, FALSE);
+			}
 			return TRUE;
 		case WM_CLOSE:
-			g_ignore_bip = (SendDlgItemMessage(hWnd, IDC_CHECK_IGNOREBIP, BM_GETCHECK, 0, 0L) == BST_CHECKED);
-			g_tag_for_pivot = (SendDlgItemMessage(hWnd, IDC_CHECK_RECENTER, BM_GETCHECK, 0, 0L) == BST_CHECKED);
-			g_mesh_separate = (SendDlgItemMessage(hWnd, IDC_CHECK_MESHSEPARATE, BM_GETCHECK, 0, 0L) == BST_CHECKED);
-			g_mesh_special = (SendDlgItemMessage(hWnd, IDC_CHECK_MESHSPECIAL, BM_GETCHECK, 0, 0L) == BST_CHECKED);
-			g_show_debug = (SendDlgItemMessage(hWnd, IDC_CHECK_DEBUG, BM_GETCHECK, 0, 0L) == BST_CHECKED);
-			g_total_frames = 0;
-			g_frame_ranges.clear();
-			GetDlgItemText(hWnd, IDC_EDIT_FRAMES, ranges_named, 127);
-
-			token = strtok(ranges_named, ",");
-			while(token != NULL)
-			{
-				// get a range
-				subtoken = strchr(token, '-');
-				if (subtoken != NULL)
-				{
-					// find a range
-					*subtoken = '\0';
-					range.first	= atoi(token);
-					range.last = atoi(subtoken+1);
-				}
-				else
-				{
-					// a single value
-					range.first	= atoi(token);
-					range.last = range.first;
-				}	
-				g_total_frames += range.last - range.first + 1;
-				g_frame_ranges.push_back(range);
-				token = strtok(NULL, ",");
-			}
-			EndDialog(hWnd, FALSE);
 			return TRUE;
 	}
 	return FALSE;

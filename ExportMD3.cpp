@@ -125,7 +125,7 @@ int SceneEnumProc::callback(INode *node)
 	nodename = node->GetName();
 	if (obj->CanConvertToType(triObjectClassID))
 	{
-		if (g_ignore_bip && (!_tcsncmp("Bip", nodename, 3)))
+		if ((g_ignore_bip && !_tcsncmp("Bip", nodename, 3)) || !_tcsncmp("*", nodename, 1))
 			return TREE_CONTINUE;
 		Append(node, obj);
 	}
@@ -423,10 +423,10 @@ int ExportQuake3Model(const TCHAR *filename, ExpInterface *ei, Interface *gi, in
 		char meshname[64];
 		memset(meshname, 0, 64);
 		strncpy(meshname, mesh_i->name, min(63, strlen(mesh_i->name)));
-		if (!_tcsncmp("Box", meshname, 3)   || !_tcsncmp("Sphere", meshname, 6)  || !_tcsncmp("Cylinder", meshname, 8) ||
-            !_tcsncmp("Torus", meshname, 5) || !_tcsncmp("Cone", meshname, 4)    || !_tcsncmp("GeoSphere", meshname, 9) ||
-			!_tcsncmp("Tube", meshname, 4)  || !_tcsncmp("Pyramid", meshname, 7) || !_tcsncmp("Plane", meshname, 5) ||
-			!_tcsncmp("Teapot", meshname, 6) )
+		if (!_tcsncmp("Box", meshname, 3)    || !_tcsncmp("Sphere", meshname, 6)  || !_tcsncmp("Cylinder", meshname, 8) ||
+            !_tcsncmp("Torus", meshname, 5)  || !_tcsncmp("Cone", meshname, 4)    || !_tcsncmp("GeoSphere", meshname, 9) ||
+			!_tcsncmp("Tube", meshname, 4)   || !_tcsncmp("Pyramid", meshname, 7) || !_tcsncmp("Plane", meshname, 5) ||
+			!_tcsncmp("Teapot", meshname, 6) || !_tcsncmp("Object", meshname, 6))
 		{
 name_conflict:
 			lazynamesfixed++;
@@ -450,6 +450,7 @@ name_conflict:
 				shadow_or_collision = true;
 
 		// get material
+		char *shadername = NULL;
 		Texmap *tex = 0;
 		Mtl *mtl = 0;
 		if (!shadow_or_collision)
@@ -467,25 +468,39 @@ name_conflict:
 					for (i = 1; i < mesh.getNumFaces(); i++)
 						if (mesh.faces[i].getMatID() != matId)
 							multi_material = true;
+
 					if (multi_material)
-						ExportWarning("Object '%s' is multimaterial and using multiple materials on its faces, that case is not yet supported (truncating to first submaterial).", node->GetName());
+						if (g_mesh_multimaterials == MULTIMATERIALS_NONE)
+							ExportWarning("Object '%s' is multimaterial and using multiple materials on its faces, that case is not yet supported (truncating to first submaterial).", node->GetName());
 					
 					// switch to submaterial
 					mtl = mtl->GetSubMtl(matId);
 				}
 
-				// get texture
-				tex = mtl->GetSubTexmap(ID_DI);
-				if (tex)
-				{
-					if (tex->ClassID() != Class_ID(BMTEX_CLASS_ID, 0x00))
-					{
-						tex = NULL;
-						ExportWarning("Object '%s' has material with wrong texture type (only Bitmap are supported).", node->GetName());
-					}
-				}
+				// get shader from material if supplied
+				if (g_mesh_materialasshader && (strstr(mtl->GetName(), "/") != NULL || strstr(mtl->GetName(), "\\") != NULL))
+					shadername = (char *)mtl->GetName();
 				else
-					ExportWarning("Object '%s' has material but no texture.", node->GetName());
+				{
+					// get texture
+					tex = mtl->GetSubTexmap(ID_DI);
+					if (tex)
+					{
+						if (tex->ClassID() == Class_ID(BMTEX_CLASS_ID, 0x00))
+						{
+							shadername = ((BitmapTex *)tex)->GetMapName();
+							if (shadername == NULL || !shadername[0])
+								ExportWarning("Object '%s' material '%s' has no bitmap.", tex->GetName(), node->GetName());
+						}
+						else
+						{
+							tex = NULL;
+							ExportWarning("Object '%s' has material with wrong texture type (only Bitmap are supported).", node->GetName());
+						}
+					}
+					else
+						ExportWarning("Object '%s' has material but no texture.", node->GetName());
+				}
 			}
 			else
 				ExportWarning("Object '%s' has no material.", node->GetName());
@@ -512,17 +527,8 @@ name_conflict:
 		ExportState("Writing mesh %s texture", meshname);
 		if (shadow_or_collision)
 			putChars(meshname, 64, file);
-		else if (tex) 
-		{
-			char *shadername = ((BitmapTex *)tex)->GetMapName();
-			if (shadername == NULL || !shadername[0])
-			{
-				putChars("noshader", 64, file);
-				ExportWarning("Object '%s' material '%s' has no bitmap.", tex->GetName(), node->GetName());
-			}
-			else
-				putMaterial(shadername, mtl, tex, file);
-		}
+		else if (shadername) 
+			putMaterial(shadername, mtl, tex, file);
 		else
 			putChars("noshader", 64, file);
 		put32(0, file); // flags
