@@ -38,3 +38,15 @@ To build MD3 Exporter you should get 3DS Max SDK and put the appropriate lib/ an
 - for Max 7: sdk/SDK_Max7
 - for Max 2012 x86: sdk/SDK_Max12
 - for Max 2012 x64: sdk/SDK_Max12/x64
+
+--------------------------------------------------------------------------------
+ Version History + Changelog
+--------------------------------------------------------------------------------
+
+1.01
+------
+- Untested support for Max 2011
+
+1.0
+------
+- Initial release. Supports Max 7 and Max 2012 (x86 and x64).
