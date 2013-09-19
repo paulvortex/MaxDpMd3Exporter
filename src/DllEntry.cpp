@@ -25,7 +25,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL,ULONG fdwReason,LPVOID lpvReserved)
 {
 	hInstance = hinstDLL;
 
-#ifdef _MAX2012
+#if defined(_MAX2012) || defined(_MAX2011)
 	if (fdwReason == DLL_PROCESS_ATTACH)
 	{
 		hInstance = hinstDLL;
