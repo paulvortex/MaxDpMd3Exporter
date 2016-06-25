@@ -12,9 +12,16 @@
 #ifndef __EXPORTMD3__H
 #define __EXPORTMD3__H
 
+// Max 2013 and higher SDK are for MSVC2010 which supports nullptr keyword
+// for MSVC2008 and lesser we need to define it manually
+#if _MSC_VER < 1600
+#define nullptr 0
+#endif
+
 #include "Max.h"
 #include "PluginRes.h"
 #include "Utils.h"
+#include "Gui.h"
 
 #include "istdplug.h"
 #include "iparamb2.h"
@@ -26,7 +33,9 @@
 #include <string>
 #include <vector>
 
-struct Range
+#include "Shlwapi.h"
+
+struct FrameRange
 {
 	unsigned int first;
 	unsigned int last;
@@ -63,7 +72,7 @@ struct ShaderMaterial
 extern std::vector<ShaderMaterial> g_shaders;
 extern char *g_shaders_string;
 
-extern std::list<Range>	g_frame_ranges;
+extern std::list<FrameRange>	g_frame_ranges;
 
 TriObject* GetTriObjectFromNode(INode *node, TimeValue t, bool &deleteIt);
 bool IsTriNode(INode *node, int start_time);
@@ -71,6 +80,6 @@ bool IsTriNode(INode *node, int start_time);
 void ScriptBox(const char *caption, const char *description, const char *script);
 void ExportResultBox(const char *caption, const char *description, const char *shadertext);
 
-int	ExportMD3(const TCHAR *name,ExpInterface *ei, Interface *gi, BOOL suppressPrompts, DWORD options);
+int	ExportMD3(const TCHAR *name, ExpInterface *ei, Interface *gi, BOOL suppressPrompts, DWORD options);
 
 #endif // __EXPORTMD3__H

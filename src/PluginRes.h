@@ -3,10 +3,8 @@
 // Used by Plugin.rc
 //
 #define IDS_LIBDESCRIPTION              1
-#define IDS_CATEGORY                    2
-#define IDS_CLASS_NAME                  3
-#define IDS_PARAMS                      4
-#define IDS_SPIN                        5
+#define IDS_PARAMS                      2
+#define IDS_SPIN                        3
 #define IDD_BOX                         9
 #define IDD_PANEL                       101
 #define IDD_EXPORTING                   102

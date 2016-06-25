@@ -22,14 +22,14 @@ bool g_mesh_materialasshader = true;
 int  g_mesh_multimaterials;
 bool g_show_debug = false;
 
-std::list<Range> g_frame_ranges;
+std::list<FrameRange> g_frame_ranges;
 
 class ExportPlugin : public SceneExport
 {
 	public:
 		static HWND hParams;
 
-		int    ExtCount();     // Number of extensions supported 
+		int   ExtCount();     // Number of extensions supported 
 		const TCHAR * Ext(int n);     // Extension #n (i.e. "ASC")
 		const TCHAR * LongDesc();     // Long ASCII description (i.e. "Ascii Export") 
 		const TCHAR * ShortDesc();    // Short ASCII description (i.e. "Ascii")
@@ -46,15 +46,15 @@ class ExportPlugin : public SceneExport
 		~ExportPlugin();		
 };
 
-class ExportMD3ClassDesc:public ClassDesc2
+class ExportMD3ClassDesc: public ClassDesc2
 {
 	public:
-	int 			IsPublic() {return 1;}
-	void *			Create(BOOL loading = FALSE) {return new ExportPlugin();}
-	const TCHAR *	ClassName() {return GetString(IDS_CLASS_NAME);}
-	SClass_ID		SuperClassID() {return SCENE_EXPORT_CLASS_ID;}
-	Class_ID		ClassID() {return EXPORTMD3_CLASS_ID;}
-	const TCHAR* 	Category() {return GetString(IDS_CATEGORY);}
+	int 			IsPublic() { return 1; }
+	void *			Create(BOOL loading = FALSE) { return new ExportPlugin(); }
+	const TCHAR *	ClassName() { return _T("ExportMD3"); }
+	SClass_ID		SuperClassID() { return SCENE_EXPORT_CLASS_ID; }
+	Class_ID		ClassID() { return EXPORTMD3_CLASS_ID; }
+	const TCHAR* 	Category() { return _T("Quake MD3 export"); }
 	const TCHAR*	InternalName() { return _T("ExportPlugin"); }	// returns fixed parsable name (scripter-visible name)
 	HINSTANCE		HInstance() { return hInstance; }				// returns owning module handle
 };
@@ -65,10 +65,10 @@ ClassDesc2* GetExportMD3Desc() {return &ExportMD3Desc;}
 static INT_PTR CALLBACK ExportMD3OptionsDlgProc(HWND hWnd,UINT message,WPARAM wParam,LPARAM lParam)
 {
 	static ExportPlugin *imp = NULL;
-	char ranges_named[128];
+	char ranges_named[1024];
 	char *token;
 	char *subtoken;
-	Range range;
+	FrameRange range;
 
 	switch(message)
 	{
@@ -82,7 +82,7 @@ static INT_PTR CALLBACK ExportMD3OptionsDlgProc(HWND hWnd,UINT message,WPARAM wP
 			SendDlgItemMessage(hWnd, IDC_CHECK_DEBUG, BM_SETCHECK, (WPARAM) false, 0L);
 			SendDlgItemMessage(hWnd, IDC_CHECK_MATERIALNAMESASSHADERS, BM_SETCHECK, (WPARAM) true, 0L);
 			SendDlgItemMessage(hWnd, IDC_MULTIMATERIAL_NONE, BM_SETCHECK, (WPARAM) true, 0L);
-			SetDlgItemText(hWnd, IDC_EDIT_FRAMES, "0");
+			GuiSetItemText(hWnd, IDC_EDIT_FRAMES, "0");
 			return TRUE;
 		case WM_COMMAND:
 			if (HIWORD(wParam) == BN_CLICKED)
@@ -103,7 +103,7 @@ static INT_PTR CALLBACK ExportMD3OptionsDlgProc(HWND hWnd,UINT message,WPARAM wP
 						g_mesh_multimaterials = MULTIMATERIALS_NONE;
 					g_total_frames = 0;
 					g_frame_ranges.clear();
-					GetDlgItemText(hWnd, IDC_EDIT_FRAMES, ranges_named, 127);
+					GuiGetItemText(hWnd, IDC_EDIT_FRAMES, ranges_named, sizeof(ranges_named) - 1);
 
 					token = strtok(ranges_named, ",");
 					while(token != NULL)
@@ -161,7 +161,7 @@ const TCHAR *ExportPlugin::Ext(int n)
 
 const TCHAR *ExportPlugin::LongDesc()
 {
-	return _T("MD3 Model");
+	return _T("Darkplaces MD3 Model exporting plugin");
 }
 	
 const TCHAR *ExportPlugin::ShortDesc() 
@@ -171,7 +171,7 @@ const TCHAR *ExportPlugin::ShortDesc()
 
 const TCHAR *ExportPlugin::AuthorName()
 {			
-	return _T("Pop N Fresh /Pavel [VorteX] Timofeyev");
+	return _T("Pop'N'Fresh and Pavel [VorteX] Timofeyev");
 }
 
 const TCHAR *ExportPlugin::CopyrightMessage() 
@@ -214,7 +214,6 @@ int	ExportPlugin::DoExport(const TCHAR *name, ExpInterface *ei, Interface *gi, B
 	
 BOOL ExportPlugin::SupportsOptions(int ext, DWORD options)
 {
-	assert(ext == 0);
 	return(options == SCENE_EXPORT_SELECTED) ? TRUE : FALSE;
 }
 
@@ -275,9 +274,9 @@ static INT_PTR CALLBACK ScriptBoxProc(HWND hWnd, UINT message, WPARAM wParam, LP
 	{
 		case WM_INITDIALOG:
 			CenterWindow(hWnd, GetParent(hWnd));
-			SetWindowText(hWnd, ScriptParms->caption);
-			SetDlgItemText(hWnd, IDC_SCRIPT, ScriptParms->script);
-			SetDlgItemText(hWnd, IDC_SCRIPT_DESC, ScriptParms->description);
+			GuiSetWindowText(hWnd, ScriptParms->caption);
+			GuiSetItemText(hWnd, IDC_SCRIPT, ScriptParms->script);
+			GuiSetItemText(hWnd, IDC_SCRIPT_DESC, ScriptParms->description);
 			return TRUE;
 			break;
 		case WM_COMMAND:
@@ -329,9 +328,9 @@ static INT_PTR CALLBACK ScriptExportBoxProc(HWND hWnd, UINT message, WPARAM wPar
 	{
 		case WM_INITDIALOG:
 			CenterWindow(hWnd, GetParent(hWnd));
-			SetWindowText(hWnd, ScriptParms->caption);
-			SetDlgItemText(hWnd, IDC_EXPORT_LOG, ScriptParms->description);
-			SetDlgItemText(hWnd, IDC_EXPORT_SHADERTEXT, ScriptParms->shader);
+			GuiSetWindowText(hWnd, ScriptParms->caption);
+			GuiSetItemText(hWnd, IDC_EXPORT_LOG, ScriptParms->description);
+			GuiSetItemText(hWnd, IDC_EXPORT_SHADERTEXT, ScriptParms->shader);
 			return TRUE;
 			break;
 		case WM_COMMAND:
@@ -340,11 +339,7 @@ static INT_PTR CALLBACK ScriptExportBoxProc(HWND hWnd, UINT message, WPARAM wPar
 				if (LOWORD(wParam) == IDC_EXPORT_CLOSE)
 					PostMessage(hWnd, WM_CLOSE, 0, 0);
 				else if (LOWORD(wParam) == IDC_EXPORT_SHADER)
-				{
-					char shadertext[32768];
-					GetDlgItemText(hWnd, IDC_EXPORT_SHADERTEXT, shadertext, sizeof(shadertext));
-					ScriptBox("Sample .shader text", "This is basic material script to use with Darkplaces engine.\r\nCopy this text and place in appropriate .shader file.", shadertext);
-				}
+					ScriptBox("Sample .shader text", "This is basic material script to use with Darkplaces engine.\r\nCopy this text and place in appropriate .shader file.", g_shaders_string);
 			}
 			return TRUE;
 			break;

@@ -46,13 +46,13 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,140,227,10
     CONTROL         "Detect ""collision"" and ""shadow"" meshes (suffixes on multiobject)",IDC_CHECK_MESHSPECIAL,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,154,227,10
-    GROUPBOX        " Multi-materials",IDC_STATIC,6,52,245,56,WS_GROUP
+    GROUPBOX        " Multi-materials",IDC_STATIC,6,52,245,56,WS_DISABLED | WS_GROUP
     CONTROL         "Dont export (switch to first submaterial)",IDC_MULTIMATERIAL_NONE,
-                    "Button",BS_AUTORADIOBUTTON,13,65,169,11
+                    "Button",BS_AUTORADIOBUTTON | WS_DISABLED,13,65,169,11
     CONTROL         "Multiple skins - export as .skin files",IDC_MULTIMATERIAL_SKINFILES,
-                    "Button",BS_AUTORADIOBUTTON,13,78,169,11
-    CONTROL         "Multiple skins - export as separate md3's suffixed by skin num)",IDC_MULTIMATERIAL_SKINMODELS,
-                    "Button",BS_AUTORADIOBUTTON,13,91,233,11
+                    "Button",BS_AUTORADIOBUTTON | WS_DISABLED,13,78,169,11
+    CONTROL         "Multiple skins - export as separate md3's suffixed by skin num",IDC_MULTIMATERIAL_SKINMODELS,
+                    "Button",BS_AUTORADIOBUTTON | WS_DISABLED,13,91,233,11
     DEFPUSHBUTTON   "Cancel",IDCANCEL,148,206,69,16
     CONTROL         "Use material name as shader name if material name contain '/'",IDC_CHECK_MATERIALNAMESASSHADERS,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,168,227,10
@@ -202,9 +202,7 @@ END
 
 STRINGTABLE 
 BEGIN
-    IDS_LIBDESCRIPTION      "MD3 model format exporter"
-    IDS_CATEGORY            "Quake .MD3 export"
-    IDS_CLASS_NAME          "ExportMD3"
+    IDS_LIBDESCRIPTION      "MD3 Model Format Exporter"
     IDS_PARAMS              "Parameters"
     IDS_SPIN                "Spin"
 END

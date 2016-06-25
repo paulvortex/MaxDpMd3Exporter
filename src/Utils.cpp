@@ -10,7 +10,6 @@
 */
 
 #include "Plugin.h"
-
 #include <direct.h>
 #include <commdlg.h>
 #include <iostream> 
@@ -242,58 +241,6 @@ void putChars(const char *c, int size, FILE *f)
 /*
 ================================================================================
  
- STRING UTILS
-
-================================================================================
-*/
-
-char ConvertASCIIC[8192];
-char *ConvertStr(const char *filename, int func(int c))
-{
-	int i;
-
-	ConvertASCIIC[0] = 0;
-	for (i = 0; i < (int)strlen(filename); i++)
-		ConvertASCIIC[i] = func(filename[i]);
-	ConvertASCIIC[i] = 0;
-	return ConvertASCIIC;
-}
-
-void FilePath (char *path, char *dest)
-{
-	char *src;
-
-	src = path + strlen(path) - 1;
-	// back up until a \ or the start
-	while (src != path && (*(src-1) != '/' && *(src-1) != '\\'))
-		src--;
-	memcpy (dest, path, src-path);
-	dest[src-path] = 0;
-}
-
-void FileBase (char *path, char *dest)
-{
-	char *src, *ext = NULL;
-
-	src = path + strlen(path) - 1;
-	// back up until a \ or the start
-	while(src != path && (*(src-1) != '/' && *(src-1) != '\\'))
-		src--;
-	while(*src)
-	{
-		if (*src == '.')
-			ext = dest;
-		*dest++ = *src++;
-	}
-	if (ext)
-		*ext = 0;
-	else
-		*dest = 0;
-}
-
-/*
-================================================================================
- 
  EXPORT MESSAGES
 
 ================================================================================
@@ -368,7 +315,7 @@ void ExportDebug(const char *text, ...)
 	va_start(argptr, text);
 	vsprintf(msg.message, text, argptr);
 	va_end(argptr);
-	SetDlgItemText( ExportMessagesWindow, IDC_TEXT_EXPORTING, msg.message);
+	GuiSetItemText(ExportMessagesWindow, IDC_TEXT_EXPORTING, msg.message);
 	ExportMessages.push_back(msg);
 }
 
@@ -383,7 +330,7 @@ void ExportState(const char *text, ...)
 	va_start(argptr, text);
 	vsprintf(msg, text, argptr);
 	va_end(argptr);
-	SetDlgItemText( ExportMessagesWindow, IDC_TEXT_EXPORTING, msg);
+	GuiSetItemText(ExportMessagesWindow, IDC_TEXT_EXPORTING, msg);
 }
 
 void ShowExportMessages(const char *shadertext)

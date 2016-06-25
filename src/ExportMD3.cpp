@@ -11,6 +11,8 @@
 
 #include "Plugin.h"
 
+#include "MeshNormalSpec.h"  // VorteX: EditNormals
+
 BOOL exportSelected;
 
 std::vector<ShaderMaterial> g_shaders;
@@ -19,7 +21,7 @@ char *g_shaders_string = NULL;
 struct ExportNode
 {
 	int i;
-	char *name;
+	const char *name;
 };
 
 struct ExportUV
@@ -32,9 +34,9 @@ struct ExportUV
 
 struct ExportVertex
 {
-	int vert;
+	int     vert;
 	Point3  normal;
-	int     normaladdr;
+	int     normalindex;
 	boolean normalfilled; 
 };
 
@@ -117,15 +119,15 @@ int SceneEnumProc::callback(INode *node)
 {
 	std::list<std::string>::iterator name_i;
 	const char *nodename;
-	
+
 	if (exportSelected && node->Selected() == FALSE)
 		return TREE_CONTINUE;
 
 	Object *obj = node->EvalWorldState(time).obj;
-	nodename = node->GetName();
+	nodename = GetChar(node->GetName());
 	if (obj->CanConvertToType(triObjectClassID))
 	{
-		if ((g_ignore_bip && !_tcsncmp("Bip", nodename, 3)) || !_tcsncmp("*", nodename, 1))
+		if ((g_ignore_bip && !strncmp("Bip", nodename, 3)) || !strncmp("*", nodename, 1))
 			return TREE_CONTINUE;
 		Append(node, obj);
 	}
@@ -151,16 +153,22 @@ Box3 SceneEnumProc::Bound()
 	bound.Init();
 	MySceneEntry *e = head;
 	
+#if _3DSMAX_VERSION >= 2013
+	ViewExp &vpt = i->GetViewExp(NULL);
+#else
 	ViewExp *vpt = i->GetViewport(NULL);
-	
+#endif
 	while(e)
 	{
 		Box3 bb;
+#if _3DSMAX_VERSION >= 2013
+		e->obj->GetWorldBoundBox(time, e->node, &vpt, bb);
+#else
 		e->obj->GetWorldBoundBox(time, e->node, vpt, bb);
+#endif
 		bound += bb;
 		e = e->next;
 	}
-
 	return bound;
 }
 
@@ -179,7 +187,6 @@ MySceneEntry *SceneEnumProc::operator[](int index)
 //////////////////////////////////////////////////////////////////////////////////
 // Messaging
 //////////////////////////////////////////////////////////////////////////////////
-
 
 //////////////////////////////////////////////////////////////////////////////////
 // Actual Export
@@ -223,7 +230,7 @@ void putMaterial(const char *name, Mtl *mtl, Texmap *tex, FILE *file)
 	bool shader_written = false;
 	for (i = 0; i < (int)g_shaders.size(); i++)
 	{
-		if (!_tcsncmp(g_shaders[i].name, subname, sizeof(g_shaders[i].name)))
+		if (!strncmp(g_shaders[i].name, subname, sizeof(g_shaders[i].name)))
 		{
 			shader_written = true;
 			break;
@@ -242,14 +249,13 @@ int ExportQuake3Model(const TCHAR *filename, ExpInterface *ei, Interface *gi, in
 	FILE *file;
 	int i, j, totalTags, totalMeshes, current_time = 0;
 	long pos_current, totalTris = 0, totalVerts = 0;
-	std::list<Range>::iterator range_i;
+	std::list<FrameRange>::iterator range_i;
 	std::vector<Point3> lFrameBBoxMin;
 	std::vector<Point3> lFrameBBoxMax;
 	long pos_tagstart;
 	long pos_tagend;
 	long pos_filesize;
 	long pos_framestart;
-	char *filepath;
 	int lazynamesfixed = 0;
 	const Point3 x_axis(1, 0, 0);
 	const Point3 z_axis(0, 0, 1);
@@ -261,19 +267,18 @@ int ExportQuake3Model(const TCHAR *filename, ExpInterface *ei, Interface *gi, in
 	totalMeshes = (int)lMeshes.size();
 
 	// open file
-	filepath = ConvertStr(filename, tolower);
-	file = fopen(filepath, "wb");
+	file = _tfopen(filename, _T("wb"));
 	if (!file)
 	{
-		ExportError("Cannot open file '%s'.", filepath);
+		ExportError("Cannot open file '%s'.", filename);
 		return FALSE;
 	}
-	ExportDebug("%s:", filepath);
+	ExportDebug("%s:", filename);
 
 	// sync pattern and version
 	putChars("IDP3", 4, file);
 	put32(15, file);
-	putChars(filename, 64, file);
+	putChars("Darkplaces MD3 Exporter", 64, file);
 	put32(0, file);   // flags
 	
 	// MD3 header
@@ -415,18 +420,33 @@ int ExportQuake3Model(const TCHAR *filename, ExpInterface *ei, Interface *gi, in
 		TriObject *tri = GetTriObjectFromNode(node, start_time, needsDel);
 		if (!tri)
 			continue;
+
+		// get mesh, compute normals
 		Mesh &mesh = tri->GetMesh();
-		      mesh.checkNormals(TRUE);
+		MeshNormalSpec *meshNormalSpec = mesh.GetSpecifiedNormals();
+		if (meshNormalSpec)
+		{
+			if (!meshNormalSpec->GetNumFaces())
+				meshNormalSpec = NULL;
+			else
+			{
+				meshNormalSpec->SetParent(&mesh);
+				meshNormalSpec->CheckNormals();
+			}
+		}
+		mesh.checkNormals(TRUE);
 
 		// fix lazy object names
 		ExportState("Attempt to fix mesh name '%s'", mesh_i->name);
-		char meshname[64];
+		char  meshname[64];
+		size_t meshnamelen = min(63, strlen(mesh_i->name));
 		memset(meshname, 0, 64);
-		strncpy(meshname, mesh_i->name, min(63, strlen(mesh_i->name)));
-		if (!_tcsncmp("Box", meshname, 3)    || !_tcsncmp("Sphere", meshname, 6)  || !_tcsncmp("Cylinder", meshname, 8) ||
-            !_tcsncmp("Torus", meshname, 5)  || !_tcsncmp("Cone", meshname, 4)    || !_tcsncmp("GeoSphere", meshname, 9) ||
-			!_tcsncmp("Tube", meshname, 4)   || !_tcsncmp("Pyramid", meshname, 7) || !_tcsncmp("Plane", meshname, 5) ||
-			!_tcsncmp("Teapot", meshname, 6) || !_tcsncmp("Object", meshname, 6))
+		strncpy(meshname, mesh_i->name, meshnamelen);
+		meshname[meshnamelen] = 0;
+		if (!strncmp("Box", meshname, 3)    || !strncmp("Sphere", meshname, 6)  || !strncmp("Cylinder", meshname, 8) ||
+            !strncmp("Torus", meshname, 5)  || !strncmp("Cone", meshname, 4)    || !strncmp("GeoSphere", meshname, 9) ||
+			!strncmp("Tube", meshname, 4)   || !strncmp("Pyramid", meshname, 7) || !strncmp("Plane", meshname, 5) ||
+			!strncmp("Teapot", meshname, 6) || !strncmp("Object", meshname, 6))
 		{
 name_conflict:
 			lazynamesfixed++;
@@ -437,7 +457,7 @@ name_conflict:
 
 			// check if it's not used by another mesh
 			for (std::list<ExportNode>::iterator m_i = lMeshes.begin(); m_i != lMeshes.end(); m_i++)
-				if (!_tcsncmp(m_i->name, meshname, strlen(meshname)))
+				if (!strncmp(m_i->name, meshname, strlen(meshname)))
 					goto name_conflict;
 			// approve name
 			ExportWarning("Lazy object name '%s' (mesh renamed to '%s').", node->GetName(), meshname);
@@ -446,11 +466,11 @@ name_conflict:
 		// special mesh check
 		bool shadow_or_collision = false;
 		if (g_mesh_special)
-			  if (!_tcsncmp("collision", meshname, 9) || !_tcsncmp("shadow", meshname, 6))
+			  if (!strncmp("collision", meshname, 9) || !strncmp("shadow", meshname, 6))
 				shadow_or_collision = true;
 
 		// get material
-		char *shadername = NULL;
+		const char *shadername = NULL;
 		Texmap *tex = 0;
 		Mtl *mtl = 0;
 		if (!shadow_or_collision)
@@ -478,8 +498,9 @@ name_conflict:
 				}
 
 				// get shader from material if supplied
-				if (g_mesh_materialasshader && (strstr(mtl->GetName(), "/") != NULL || strstr(mtl->GetName(), "\\") != NULL))
-					shadername = (char *)mtl->GetName();
+				char *materialname = GetChar(mtl->GetName());
+				if (g_mesh_materialasshader && (strstr(materialname, "/") != NULL || strstr(materialname, "\\") != NULL))
+					shadername = GetChar(mtl->GetName());
 				else
 				{
 					// get texture
@@ -488,7 +509,7 @@ name_conflict:
 					{
 						if (tex->ClassID() == Class_ID(BMTEX_CLASS_ID, 0x00))
 						{
-							shadername = ((BitmapTex *)tex)->GetMapName();
+							shadername = GetChar(((BitmapTex *)tex)->GetMapName());
 							if (shadername == NULL || !shadername[0])
 								ExportWarning("Object '%s' material '%s' has no bitmap.", tex->GetName(), node->GetName());
 						}
@@ -543,7 +564,7 @@ name_conflict:
 		{
 			vVertexes[i].vert = i;
 			vVertexes[i].normalfilled = false;
-			// todo: check for coicident verts
+			// todo: check for coincident verts
 		}
 		int vNumExtraVerts = 0;
 
@@ -574,8 +595,17 @@ name_conflict:
 				{
 					int numNormals;
 					RVertex *rv = mesh.getRVertPtr(vert);
-					if (rv && rv->rFlags & SPECIFIED_NORMAL)
+					if (meshNormalSpec)
+					{  
+						ExportState("face %i vert %i have normal specified", i, j);
+						// mesh have explicit normals (i.e. Edit Normals modifier)
+						vn = meshNormalSpec->GetNormal(i, j);
+						vni = meshNormalSpec->GetNormalIndex(i, j);
+					}
+					else if (rv && rv->rFlags & SPECIFIED_NORMAL)
 					{
+						ExportState("face %i vert %i have SPECIFIED_NORMAL flag", i, j);
+						// SPECIFIED_NORMAL flag
 						vn = rv->rn.getNormal();
 						vni = 0;
 					}
@@ -584,11 +614,14 @@ name_conflict:
 						// If there is only one vertex is found in the rn member.
 						if (numNormals == 1)
 						{
+							ExportState("face %i vert %i have solid smooth group", i, j);
 							vn = rv->rn.getNormal();
 							vni = 0;
+							
 						}
 						else
 						{
+							ExportState("face %i vert %i have mixed smoothing groups", i, j);
 							// If two or more vertices are there you need to step through them
 							// and find the vertex with the same smoothing group as the current face.
 							// You will find multiple normals in the ern member.
@@ -604,6 +637,7 @@ name_conflict:
 					}
 					else
 					{
+						ExportState("face %i vert %i flat shaded", i, j);
 						// Get the normal from the Face if no smoothing groups are there
 						vn = mesh.getFaceNormal(i);
 						vni = 0 - (i + 1);
@@ -614,7 +648,7 @@ name_conflict:
 				if (!vVertexes[vert].normalfilled)
 				{
 					vVertexes[vert].normal = vn;
-					vVertexes[vert].normaladdr = vni;
+					vVertexes[vert].normalindex = vni;
 					vVertexes[vert].normalfilled = true;
 				}
 				else if ((vVertexes[vert].normal - vn).Length() >= normal_epsilon)
@@ -637,7 +671,7 @@ name_conflict:
 						ExportVertex NewVert;
 						NewVert.vert = vVertexes[vert].vert;
 						NewVert.normal = vn;
-						NewVert.normaladdr = vni;
+						NewVert.normalindex = vni;
 						NewVert.normalfilled = true;
 						vTriangles[i].e[j] = (int)vVertexes.size();
 						vVertexes.push_back(NewVert);
@@ -707,7 +741,7 @@ name_conflict:
 							ExportVertex NewVert;
 							NewVert.vert = vVertexes[vert].vert;
 							NewVert.normal = vVertexes[vert].normal;
-							NewVert.normaladdr = vVertexes[vert].normaladdr;
+							NewVert.normalindex = vVertexes[vert].normalindex;
 							NewVert.normalfilled = vVertexes[vert].normalfilled;
 							vTriangles[i].e[j] = (int)vVertexes.size();
 							vVertexes.push_back(NewVert);
@@ -727,7 +761,7 @@ name_conflict:
 		int vNumExtraVertsForUV = (vNumExtraVerts - vNumExtraVertsForSmoothGroups);
 
 		// print some debug stats
-		ExportDebug("    mesh %s: %i vertexes +%i SG +%i UV, %i triangles", meshname, ((int)vVertexes.size() - vNumExtraVerts), vNumExtraVertsForSmoothGroups, vNumExtraVertsForUV, (int)vTriangles.size());
+		ExportDebug("    mesh %s: %i vertexes +%i %s +%i UV, %i triangles", meshname, ((int)vVertexes.size() - vNumExtraVerts), vNumExtraVertsForSmoothGroups, meshNormalSpec ? "EditNormals" : "SmoothGroups", vNumExtraVertsForUV, (int)vTriangles.size());
 
 		// fill in triangle start
 		pos_current = ftell(file);
@@ -793,14 +827,31 @@ name_conflict:
 			for (i = (*range_i).first; i <= (int)(*range_i).last; i++, current_frame++)
 			{
 				bool _needsDel;
+
+				// get triobject for current frame
 				SceneEnumProc current_scene(ei->theScene, i * g_ticks_per_frame, gi);
 				current_time = current_scene.time;
 				INode *_node = current_scene[mesh_i->i]->node;
 				TriObject *_tri	= GetTriObjectFromNode(_node, current_time, _needsDel);
 				if (!_tri)
 					continue;
+
+				// get mesh, compute normals
 				Mesh &_mesh	= _tri->GetMesh();
-				      _mesh.checkNormals(TRUE);
+				MeshNormalSpec *_meshNormalSpec = _mesh.GetSpecifiedNormals();
+				if (_meshNormalSpec)
+				{
+					if (!_meshNormalSpec->GetNumFaces())
+						_meshNormalSpec = NULL;
+					else
+					{
+						_meshNormalSpec->SetParent(&_mesh);
+						_meshNormalSpec->CheckNormals();
+					}
+				}
+				_mesh.checkNormals(TRUE);
+
+				// get transformations for current frame
 				Matrix3 _tm	= _node->GetObjTMAfterWSM(current_time);
 
 				ExportState("Mesh %s: writing frame %i of %i", meshname, current_frame, g_total_frames);
@@ -813,7 +864,7 @@ name_conflict:
 
 					int vert = vVertexes[j].vert;
 					Point3 &v = _tm.PointTransform(_mesh.getVert(vert));
-
+					
 					// populate bbox data
 					if (!shadow_or_collision)
 					{
@@ -834,18 +885,22 @@ name_conflict:
 					// get normal
 					ExportState("Mesh %s: transform vertex normal %i of %i", meshname, j, (int)vVertexes.size());
 					Point3 n;
-					if (!vVertexes[j].normalfilled || !_mesh.normalsBuilt)
+					if (_meshNormalSpec) // mesh have explicit normals (i.e. Edit Normals modifier)
+						n = _meshNormalSpec->Normal(vVertexes[j].normalindex);
+					else if (!vVertexes[j].normalfilled || !_mesh.normalsBuilt)
 						n = _mesh.getNormal(vert);
 					else
 					{
 						RVertex *rv = _mesh.getRVertPtr(vert);
-						if (vVertexes[j].normaladdr < 0)
-							n = _mesh.getFaceNormal((0 - vVertexes[j].normaladdr) - 1);
-						else if (vVertexes[j].normaladdr == 0)
+						if (vVertexes[j].normalindex < 0)
+							n = _mesh.getFaceNormal((0 - vVertexes[j].normalindex) - 1);
+						else if (vVertexes[j].normalindex == 0)
 							n = rv->rn.getNormal();
 						else 
-							n = rv->ern[vVertexes[j].normaladdr - 1].getNormal();
+							n = rv->ern[vVertexes[j].normalindex - 1].getNormal();
 					}
+
+					// transform normal
 					Point3 &nt = _tm.VectorTransform(n).Normalize();
 
 					// encode a normal vector into a 16-bit latitude-longitude value
@@ -894,7 +949,7 @@ name_conflict:
 		pos_current = ftell(file);
 		fseek(file, pos_meshsize, SEEK_SET);
 		put32(pos_current - pos_meshstart, file);
-		fseek(file, pos_current, SEEK_SET);
+		fseek(file, pos_current, SEEK_SET);  
 
 		// reset back to first frame
 		SceneEnumProc scratch(ei->theScene, start_time, gi);
@@ -993,21 +1048,15 @@ int ExportMD3(const TCHAR *filename, ExpInterface *ei, Interface *gi, BOOL suppr
 		else if (g_mesh_separate)
 		{
 			// get the meshes and tags we want to export
-			char filebase[128];
-			char filepath[2048];
-			char sepfile[2048];
-			char *fn;
-			fn = const_cast<char *>(filename);
-			FileBase(fn, filebase);
-			FilePath(fn, filepath);
 			for (i = 0; i < checkScene.Count(); i++)
 			{
 				INode *node	= checkScene[i]->node;
-				if (!_tcsncmp("*", node->GetName(), 1))
+				char  *nodename = GetChar(node->GetName());
+
+				// do not export *-named and tag_ object names
+				if (!strncmp("*", nodename, 1) || !strncmp("tag_", nodename, 4))
 					continue;
-				if (!_tcsncmp("tag_", node->GetName(), 4))
-					continue;
-				if (g_mesh_special && (strstr(node->GetName(), "_collision") || strstr(node->GetName(), "_shadow")))
+				if (g_mesh_special && (strstr(nodename, "_collision") || strstr(nodename, "_shadow")))
 					continue;
 				if (!IsTriNode(node, start_time))
 					continue;
@@ -1026,14 +1075,15 @@ int ExportMD3(const TCHAR *filename, ExpInterface *ei, Interface *gi, BOOL suppr
 					for (j = 0; j < checkScene.Count(); j++)
 					{
 						INode *_node = checkScene[j]->node;
-						if (!_tcscmp(collisionNodeName, _node->GetName()))
+						char  *_nodename = GetChar(_node->GetName());
+						if (!strcmp(collisionNodeName, _nodename))
 						{		
 							exportNode.i = j;
 							exportNode.name = "collision";
 							lMeshes.push_back(exportNode);
 							continue;
 						}
-						if (!_tcscmp(shadowNodeName, _node->GetName()))
+						if (!strcmp(shadowNodeName, _nodename))
 						{
 							exportNode.i = j;
 							exportNode.name = "shadow";
@@ -1042,8 +1092,16 @@ int ExportMD3(const TCHAR *filename, ExpInterface *ei, Interface *gi, BOOL suppr
 					}
 				}
 
+				// get file basename and path
+				TCHAR filebase[2048], filepath[2048];
+				_tcscpy_s(filebase, sizeof(filebase), filename);
+				PathStripPath(filebase);
+				PathRemoveExtension(filebase);
+				_tcscpy_s(filepath, sizeof(filepath), filename);
+				PathRemoveFileSpec(filepath);
 				// export
-				sprintf(sepfile, "%s%s_%s.md3", filepath, filebase, node->GetName());
+				TCHAR sepfile[2048];
+				_stprintf_s(sepfile, sizeof(sepfile), _T("%s\\%s_%s.md3"), filepath, filebase, node->GetName());
 				result = ExportQuake3Model(sepfile, ei, gi, start_time, lTags, lMeshes);
 				lTags.clear();
 				lMeshes.clear();
@@ -1055,15 +1113,15 @@ int ExportMD3(const TCHAR *filename, ExpInterface *ei, Interface *gi, BOOL suppr
 			{
 				INode *node	= checkScene[i]->node;
 				exportNode.i = i;
-				exportNode.name = node->GetName();
+				exportNode.name = GetChar(node->GetName());
 				// any object whose name begins with * will not be exported
-				if (!_tcsncmp("*", exportNode.name, 1))
+				if (!strncmp("*", exportNode.name, 1))
 					continue;
 				// ignore parts (use only if exporting separate models)
 				if (g_mesh_special && (strstr(exportNode.name, "_collision") || strstr(exportNode.name, "_shadow")))
 					continue;
 				// consider any object whose name starts with 'tag_' to be a tag
-				if (_tcsncmp("tag_", exportNode.name, 4) == 0)
+				if (!strncmp("tag_", exportNode.name, 4))
 				{
 					lTags.push_back(exportNode);
 					continue;

@@ -25,20 +25,18 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL,ULONG fdwReason,LPVOID lpvReserved)
 {
 	hInstance = hinstDLL;
 
-#if defined(_MAX2012) || defined(_MAX2011)
+#if _3DSMAX_VERSION <= 7
+	if (!controlsInit)
+	{
+		controlsInit = TRUE;
+		InitCustomControls(hInstance); // Initialize MAX's custom controls
+		InitCommonControls(); // Initialize Win95 controls
+	}
+#else
 	if (fdwReason == DLL_PROCESS_ATTACH)
 	{
 		hInstance = hinstDLL;
 		DisableThreadLibraryCalls(hInstance);
-	}
-#else
-	if (!controlsInit)
-	{
-		controlsInit = TRUE;
-		// Initialize MAX's custom controls
-		InitCustomControls(hInstance);
-		// Initialize Win95 controls
-		InitCommonControls();			
 	}
 #endif		
 	return (TRUE);
@@ -86,4 +84,3 @@ TCHAR *GetString(int id)
 		return LoadString(hInstance, id, buf, sizeof(buf)) ? buf : NULL;
 	return NULL;
 }
-
