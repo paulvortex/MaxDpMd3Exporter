@@ -52,7 +52,7 @@ Authors
 1.02
 ------
 - Preliminary support for Max 2013 and Max 2014 SDK (not proven to be working)
-- Fixed EditNormals modifier support (thanks to Michael <archangel35757@yahoo.com>)
+- Fixed EditNormals modifier support (thanks to Michael <Archangel35757>)
 
 1.01
 ------
