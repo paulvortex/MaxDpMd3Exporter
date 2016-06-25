@@ -41,15 +41,16 @@ To build MD3 Exporter you should get 3DS Max SDK and put the appropriate lib/ an
 
 Authors
 ------
-Original MD3 exporter plugin by Pop'N'Fresh
-Darkplaces MD3 Exporter generic changes by Pavel [VorteX] Timofeyev
-EditNormals fixes by Michael <archangel35757@yahoo.com>
+- Original MD3 exporter plugin by Pop'N'Fresh
+- Generic changes by Pavel [VorteX] Timofeyev
+- EditNormals fixes by Michael <archangel35757@yahoo.com>
 
 --------------------------------------------------------------------------------
  Version History + Changelog
 --------------------------------------------------------------------------------
 
 1.02
+------
 - Preliminary support for Max 2013 and Max 2014 SDK (not proven to be working)
 - Fixed EditNormals modifier support (thanks to Michael <archangel35757@yahoo.com>)
 
