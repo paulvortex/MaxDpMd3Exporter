@@ -5,13 +5,14 @@
  based on Pop'n'Fresh MD3 Exporter
 
  additional changes by coded by Pavel P. [VorteX] Timofeyev
+ additional contribition by Michael <archangel35757@yahoo.com>
 
 ================================================================================
 */
 
 #include "Plugin.h"
 
-#include "MeshNormalSpec.h"  // VorteX: EditNormals
+#include "MeshNormalSpec.h"
 
 BOOL exportSelected;
 
