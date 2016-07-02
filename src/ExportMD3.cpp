@@ -5,7 +5,7 @@
  based on Pop'n'Fresh MD3 Exporter
 
  additional changes by coded by Pavel P. [VorteX] Timofeyev
- additional contribition by Michael <archangel35757@yahoo.com>
+ additional contribition by Michael <archangel35757@yahoo.com> Lawler
 
 ================================================================================
 */
@@ -302,8 +302,11 @@ int ExportQuake3Model(const TCHAR *filename, ExpInterface *ei, Interface *gi, in
 	lFrameBBoxMax.resize(g_total_frames);
 	for (i = 0; i < g_total_frames; i++)
 	{
-		ExportState("Writing info for frame %i of %i", i, g_total_frames);
-		putFloat(-1.0f, file);	// bbox min vector
+		// init frame data
+		lFrameBBoxMin[i].Set(0, 0, 0);
+		lFrameBBoxMax[i].Set(0, 0, 0);
+		// put data
+		putFloat(-1.0f, file); // bbox min vector
 		putFloat(-1.0f, file);
 		putFloat(-1.0f, file);	
 		putFloat( 1.0f, file); // bbox max vector
