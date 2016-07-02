@@ -1,0 +1,1 @@
+Extract SDK_ files here to get SDK includes for building MaxDpMd3Exporter.

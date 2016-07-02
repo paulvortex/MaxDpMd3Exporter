@@ -1,5 +1,17 @@
-# ignore max SDK dependencies folder
-sdk/
+# Ignore MAX SDK
+sdk/SDK_Max7/include
+sdk/SDK_Max7/lib
+sdk/SDK_Max11/include
+sdk/SDK_Max11/lib
+sdk/SDK_Max11/lib64
+sdk/SDK_Max12/include
+sdk/SDK_Max12/lib
+sdk/SDK_Max12/lib64
+sdk/SDK_Max13/include
+sdk/SDK_Max13/lib
+sdk/SDK_Max13/lib64
+sdk/SDK_Max14/include
+sdk/SDK_Max14/lib64
 
 #################
 ## Eclipse
