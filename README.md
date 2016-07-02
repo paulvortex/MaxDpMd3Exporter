@@ -43,11 +43,15 @@ Authors
 ------
 - Original MD3 exporter plugin by Pop'N'Fresh
 - Generic changes by Pavel [VorteX] Timofeyev
-- EditNormals fixes by Michael <archangel35757@yahoo.com>
+- EditNormals actual support and bugfixes by Michael Lawler <archangel35757@yahoo.com>
 
 --------------------------------------------------------------------------------
  Version History + Changelog
 --------------------------------------------------------------------------------
+
+1.03
+------
+- Fixed bug with bounding box calculations (bbox calculation were messed up)
 
 1.02
 ------
